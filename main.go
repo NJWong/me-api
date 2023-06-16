@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -35,7 +38,13 @@ func main() {
 	app.Get("/characters", getCharacters)
 	app.Get("/characters/:id", getCharacter)
 
-	app.Listen(":8080")
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Fatal(app.Listen("0.0.0.0:" + port))
 }
 
 func getCharacters(c *fiber.Ctx) error {

@@ -8,27 +8,27 @@ import (
 )
 
 type Character struct {
-	ID int `json:"id"`
-	Name string `json:"name"`
-	Species int `json:"species"`
-	Gender int `json:"gender"`
-	Class string `json:"class"`
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Species int    `json:"species"`
+	Gender  int    `json:"gender"`
+	Class   string `json:"class"`
 }
 
 var characters = []Character{
 	{
-		ID: 1,
-		Name: "Commander Shepard",
+		ID:      1,
+		Name:    "Commander Shepard",
 		Species: 1,
-		Gender: 1,
-		Class: "N7 Alliance Marine / Spectre",
+		Gender:  1,
+		Class:   "N7 Alliance Marine / Spectre",
 	},
 	{
-		ID: 2,
-		Name: "Liara T'Soni",
+		ID:      2,
+		Name:    "Liara T'Soni",
 		Species: 2,
-		Gender: 3,
-		Class: "Asari Scientist",
+		Gender:  3,
+		Class:   "Asari Scientist",
 	},
 }
 

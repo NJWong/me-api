@@ -33,8 +33,8 @@ func main() {
 	app.Use(logger.New())
 
 	// Add routes
-	api.AddHealthEndpoints(app)
-	api.AddCharacterEndpoints(app)
+	api.AddHealthRoutes(app)
+	api.AddCharactersRoutes(app)
 
 	// Get the port from the environment
 	port := os.Getenv("PORT")

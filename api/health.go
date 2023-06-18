@@ -2,7 +2,7 @@ package api
 
 import "github.com/gofiber/fiber/v2"
 
-func AddHealthEndpoints(app *fiber.App) {
+func AddHealthRoutes(app *fiber.App) {
 	apiGroup := app.Group("/api")
 	apiGroup.Get("/health", handleHealthCheck)
 }

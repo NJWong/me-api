@@ -9,7 +9,7 @@ import (
 	"github.com/njwong/me-api/models"
 )
 
-func AddCharacterEndpoints(app *fiber.App) {
+func AddCharactersRoutes(app *fiber.App) {
 	apiGroup := app.Group("/api")
 	apiGroup.Get("/characters", handleGetCharacters)
 	apiGroup.Get("/characters/:id", handleGetCharacter)

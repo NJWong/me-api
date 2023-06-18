@@ -35,6 +35,7 @@ func main() {
 	// Add routes
 	api.AddHealthRoutes(app)
 	api.AddCharactersRoutes(app)
+	api.AddGendersEndpoints(app)
 
 	// Get the port from the environment
 	port := os.Getenv("PORT")

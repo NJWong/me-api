@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/njwong/me-api/database"
@@ -24,7 +23,8 @@ func handleGetCharacters(c *fiber.Ctx) error {
 	res, err := db.Query(query)
 
 	if err != nil {
-		log.Fatal("(getCharacters) db.Query - ", err)
+		fmt.Print("(getCharacters) db.Query - ", err)
+		return err
 	}
 
 	defer res.Close()
@@ -37,7 +37,8 @@ func handleGetCharacters(c *fiber.Ctx) error {
 		err := res.Scan(&character.ID, &character.Name, &character.Species, &character.Gender, &character.Class)
 
 		if err != nil {
-			log.Fatal("(getCharacters) res.Scan - ", err)
+			fmt.Print("(getCharacters) res.Scan - ", err)
+			return err
 		}
 
 		characters = append(characters, character)
@@ -58,7 +59,8 @@ func handleGetCharacter(c *fiber.Ctx) error {
 	character, err := findCharacterByID(id)
 
 	if err != nil {
-		log.Fatal("(handleGetCharacter) findCharacterByID - ", err)
+		fmt.Print("(handleGetCharacter) findCharacterByID - ", err)
+		return err
 	}
 
 	if character == nil {

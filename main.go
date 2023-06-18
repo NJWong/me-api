@@ -1,10 +1,16 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
+
+	"github.com/njwong/me-api/handlers"
 )
 
 type Character struct {
@@ -15,39 +21,65 @@ type Character struct {
 	Class   string `json:"class"`
 }
 
-var characters = []Character{
-	{
-		ID:      1,
-		Name:    "Commander Shepard",
-		Species: 1,
-		Gender:  1,
-		Class:   "N7 Alliance Marine / Spectre",
-	},
-	{
-		ID:      2,
-		Name:    "Liara T'Soni",
-		Species: 2,
-		Gender:  3,
-		Class:   "Asari Scientist",
-	},
-}
+var db *sql.DB
 
 func main() {
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Failed to load env", err)
+	}
+
+	// Open a connection to the database
+	db, err = sql.Open("mysql", os.Getenv("DSN"))
+	if err != nil {
+		log.Fatal("Failed to open db connection", err)
+	}
+
+	// Create app and define routes
 	app := fiber.New()
+
+	app.Get("/health", handlers.HandleHealthCheck)
 
 	app.Get("/characters", getCharacters)
 	app.Get("/characters/:id", getCharacter)
 
+	// Get the port from the environment
 	port := os.Getenv("PORT")
 
 	if port == "" {
 		port = "8080"
 	}
 
+	// Run the app listening on the selected port
 	log.Fatal(app.Listen("0.0.0.0:" + port))
 }
 
 func getCharacters(c *fiber.Ctx) error {
+	query := "SELECT * FROM characters"
+
+	res, err := db.Query(query)
+
+	if err != nil {
+		log.Fatal("(getCharacters) db.Query", err)
+	}
+
+	defer res.Close()
+
+	characters := []Character{}
+
+	for res.Next() {
+		var c Character
+
+		err := res.Scan(&c.ID, &c.Name, &c.Species, &c.Gender, &c.Class)
+
+		if err != nil {
+			log.Fatal("(getCharacters) res.scan", err)
+		}
+
+		characters = append(characters, c)
+	}
+
 	return c.JSON(characters)
 }
 
@@ -82,11 +114,14 @@ func getCharacterID(c *fiber.Ctx) int {
 }
 
 func findCharacterByID(id int) *Character {
-	for _, character := range characters {
-		if character.ID == id {
-			return &character
-		}
+	var character Character
+
+	query := fmt.Sprintf("SELECT * FROM characters WHERE id = %d", id)
+	err := db.QueryRow(query).Scan(&character.ID, &character.Name, &character.Species, &character.Gender, &character.Class)
+
+	if err != nil {
+		log.Fatal("(getCharacter) db.Query", err)
 	}
 
-	return nil
+	return &character
 }

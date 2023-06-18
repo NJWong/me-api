@@ -25,16 +25,23 @@ var db *sql.DB
 
 func main() {
 	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Failed to load env", err)
+	goEnv := os.Getenv("GO_ENV")
+
+	if goEnv == "" || goEnv == "development" {
+
+		if err := godotenv.Load(); err != nil {
+			log.Fatal("(main) failed to load env - ", err)
+		}
 	}
 
 	// Open a connection to the database
-	db, err = sql.Open("mysql", os.Getenv("DSN"))
+	connection, err := sql.Open("mysql", os.Getenv("DSN"))
 	if err != nil {
 		log.Fatal("Failed to open db connection", err)
 	}
+
+	// Set the global db
+	db = connection
 
 	// Create app and define routes
 	app := fiber.New()

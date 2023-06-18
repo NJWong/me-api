@@ -13,7 +13,7 @@ func AddCharactersRoutes(app *fiber.App) {
 	apiGroup := app.Group("/api")
 	apiGroup.Get("/characters", handleGetCharacters)
 	apiGroup.Get("/characters/:id", handleGetCharacter)
-	apiGroup.Post("/characters", handleCreateCharacter)
+	// apiGroup.Post("/characters", handleCreateCharacter)
 }
 
 func handleGetCharacters(c *fiber.Ctx) error {

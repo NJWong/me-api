@@ -10,9 +10,10 @@ import (
 )
 
 func AddCharacterEndpoints(app *fiber.App) {
-	app.Get("/characters", handleGetCharacters)
-	app.Get("/characters/:id", handleGetCharacter)
-	app.Post("/characters", handleCreateCharacter)
+	apiGroup := app.Group("/api")
+	apiGroup.Get("/characters", handleGetCharacters)
+	apiGroup.Get("/characters/:id", handleGetCharacter)
+	apiGroup.Post("/characters", handleCreateCharacter)
 }
 
 func handleGetCharacters(c *fiber.Ctx) error {

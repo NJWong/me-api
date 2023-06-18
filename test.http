@@ -1,12 +1,15 @@
 
+### Health check
+GET http://0.0.0.0:8080/api/health HTTP/1.1
+
 ### Get all characters
-GET http://0.0.0.0:8080/characters HTTP/1.1
+GET http://0.0.0.0:8080/api/characters HTTP/1.1
 
 ### Get a single character
-GET http://0.0.0.0:8080/characters/1 HTTP/1.1
+GET http://0.0.0.0:8080/api/characters/1 HTTP/1.1
 
 ### Create a character
-POST http://0.0.0.0:8080/characters HTTP/1.1
+POST http://0.0.0.0:8080/api/characters HTTP/1.1
 Content-Type: application/json
 
 {

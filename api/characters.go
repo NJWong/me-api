@@ -23,8 +23,11 @@ func handleGetCharacters(c *fiber.Ctx) error {
 	res, err := db.Query(query)
 
 	if err != nil {
-		fmt.Print("(getCharacters) db.Query - ", err)
-		return err
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"msg": "Internal server error",
+		})
 	}
 
 	defer res.Close()
@@ -37,8 +40,11 @@ func handleGetCharacters(c *fiber.Ctx) error {
 		err := res.Scan(&character.ID, &character.Name, &character.Species, &character.Gender, &character.Class)
 
 		if err != nil {
-			fmt.Print("(getCharacters) res.Scan - ", err)
-			return err
+			fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"msg": "Internal server error",
+			})
 		}
 
 		characters = append(characters, character)
@@ -51,21 +57,20 @@ func handleGetCharacter(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 
 	if err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid character ID",
+			"msg": "Bad request - invalid id",
 		})
 	}
 
 	character, err := findCharacterByID(id)
 
-	if err != nil {
-		fmt.Print("(handleGetCharacter) findCharacterByID - ", err)
-		return err
-	}
+	if character == nil || err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
 
-	if character == nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Character not found",
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"msg": "Character not found",
 		})
 	}
 

@@ -23,8 +23,11 @@ func handleGetGenders(c *fiber.Ctx) error {
 	res, err := db.Query(query)
 
 	if err != nil {
-		fmt.Print("(getGenders) db.Query - ", err)
-		return err
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"msg": "Internal server error",
+		})
 	}
 
 	defer res.Close()
@@ -37,8 +40,11 @@ func handleGetGenders(c *fiber.Ctx) error {
 		err := res.Scan(&gender.ID, &gender.Name)
 
 		if err != nil {
-			fmt.Print("(getGenders) res.Scan - ", err)
-			return err
+			fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"msg": "Internal server error",
+			})
 		}
 
 		genders = append(genders, gender)
@@ -51,21 +57,20 @@ func handleGetGender(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 
 	if err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid gender ID",
+			"msg": "Bad request - invalid id",
 		})
 	}
 
 	gender, err := findGenderByID(id)
 
-	if err != nil {
-		fmt.Print("(handleGetCharacter) findCharacterByID - ", err)
-		return err
-	}
+	if gender == nil || err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
 
-	if gender == nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Gender not found",
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"msg": "Gender not found",
 		})
 	}
 

@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 
@@ -29,13 +31,25 @@ func main() {
 	// Create app
 	app := fiber.New()
 
-	// Add middleware
+	// Add logger middleware
 	app.Use(logger.New())
+
+	// Allow requests from any origin
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+	}))
+
+	// Limit requests to 100 per minute
+	app.Use(limiter.New(limiter.Config{
+		Max:        100,
+		Expiration: 60,
+	}))
 
 	// Add routes
 	api.AddHealthRoutes(app)
 	api.AddCharactersRoutes(app)
 	api.AddGendersEndpoints(app)
+	api.AddSpeciesEndpoints(app)
 
 	// Get the port from the environment
 	port := os.Getenv("PORT")

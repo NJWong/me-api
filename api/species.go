@@ -13,6 +13,7 @@ func AddSpeciesEndpoints(app *fiber.App) {
 
 	apiGroup.Get("/species", handleGetSpecies)
 	apiGroup.Get("/species/:id", handleGetSpeciesById)
+	apiGroup.Post("/species", handleCreateSpecies)
 }
 
 func handleGetSpecies(c *fiber.Ctx) error {
@@ -86,4 +87,39 @@ func findSpeciesByID(id int) (*models.Species, error) {
 	err := db.QueryRow(query).Scan(&species.ID, &species.Name)
 
 	return &species, err
+}
+
+func handleCreateSpecies(c *fiber.Ctx) error {
+	var species models.Species
+
+	err := c.BodyParser(&species)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	db := database.Client
+
+	query := fmt.Sprintf("INSERT INTO species (name) VALUES (\"%s\")", species.Name)
+
+	result, err := db.Exec(query)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create species",
+		})
+	}
+
+	id, err := result.LastInsertId()
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get species ID",
+		})
+	}
+
+	species.ID = int(id)
+	return c.Status(fiber.StatusCreated).JSON(species)
 }

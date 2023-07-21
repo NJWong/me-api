@@ -18,6 +18,7 @@ func AddCharactersRoutes(app *fiber.App) {
 func AddAdminCharacterRoutes(app *fiber.App) {
 	apiGroup := app.Group("/api")
 	apiGroup.Post("/characters", handleCreateCharacter)
+	apiGroup.Put("/characters/:id", handleUpdateCharacter)
 	apiGroup.Delete("/characters/:id", handleDeleteCharacterById)
 }
 
@@ -59,6 +60,7 @@ func handleGetCharacters(c *fiber.Ctx) error {
 
 		if speciesID.Valid {
 			character.Species = &models.SpeciesObject{
+				ID:   int(speciesID.Int64),
 				Name: speciesName.String,
 				URL:  fmt.Sprintf("https://me-api.fly.dev/api/species/%d", speciesID.Int64),
 			}
@@ -66,6 +68,7 @@ func handleGetCharacters(c *fiber.Ctx) error {
 
 		if genderID.Valid {
 			character.Gender = &models.GenderObject{
+				ID:   int(genderID.Int64),
 				Name: genderName.String,
 				URL:  fmt.Sprintf("https://me-api.fly.dev/api/genders/%d", genderID.Int64),
 			}
@@ -106,6 +109,7 @@ func findCharacterByID(id int) (*models.Character, error) {
 
 	var character models.Character
 
+	// TODO - LEFT JOIN to populate the gender and species fields with data
 	query := fmt.Sprintf("SELECT * FROM characters WHERE id = %d", id)
 	err := db.QueryRow(query).Scan(&character.ID, &character.Name, &character.Species, &character.Gender, &character.Class)
 
@@ -191,4 +195,53 @@ func handleDeleteCharacterById(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"msg": "Character deleted"})
+}
+
+func handleUpdateCharacter(c *fiber.Ctx) error {
+	// Get the id from params
+	id, err := c.ParamsInt("id")
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"msg": "Bad request - invalid id",
+		})
+	}
+
+	var character models.Character
+	err = c.BodyParser(&character)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"msg": "Bad request - invalid data",
+		})
+	}
+
+	db := database.Client
+
+	// Using parameterized queries to avoid escaping special characters like `'`
+	query := "UPDATE characters SET name = ?, species = ?, gender = ?, class = ? WHERE id = ?"
+
+	stmt, err := db.Prepare(query)
+
+	if err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"msg": "Internal server error",
+		})
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(character.Name, character.Species, character.Gender, character.Class, id)
+
+	if err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"msg": "Internal server error",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"msg": "Character updated"})
 }

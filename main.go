@@ -55,6 +55,7 @@ func main() {
 	// Add admin protected routes
 	app.Use(middleware.JWTAuth)
 	api.AddAdminCharacterRoutes(app)
+	api.AddAdminGendersEndpoints(app)
 	api.AddAdminSpeciesEndpoints(app)
 
 	// Get the port from the environment

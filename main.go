@@ -12,6 +12,7 @@ import (
 
 	"github.com/njwong/me-api/api"
 	"github.com/njwong/me-api/database"
+	"github.com/njwong/me-api/middleware"
 )
 
 func main() {
@@ -45,11 +46,16 @@ func main() {
 		Expiration: 60,
 	}))
 
-	// Add routes
+	// Add public routes
 	api.AddHealthRoutes(app)
 	api.AddCharactersRoutes(app)
 	api.AddGendersEndpoints(app)
 	api.AddSpeciesEndpoints(app)
+
+	// Add admin protected routes
+	app.Use(middleware.JWTAuth)
+	api.AddAdminCharacterRoutes(app)
+	api.AddAdminSpeciesEndpoints(app)
 
 	// Get the port from the environment
 	port := os.Getenv("PORT")

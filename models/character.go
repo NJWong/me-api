@@ -7,3 +7,11 @@ type Character struct {
 	Gender  int    `json:"gender"`
 	Class   string `json:"class"`
 }
+
+type CharacterObject struct {
+	ID      int            `json:"id"`
+	Name    string         `json:"name"`
+	Species *SpeciesObject `json:"species"`
+	Gender  *GenderObject  `json:"gender"`
+	Class   string         `json:"class"`
+}

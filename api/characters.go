@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,13 +13,18 @@ func AddCharactersRoutes(app *fiber.App) {
 	apiGroup := app.Group("/api")
 	apiGroup.Get("/characters", handleGetCharacters)
 	apiGroup.Get("/characters/:id", handleGetCharacter)
-	// apiGroup.Post("/characters", handleCreateCharacter)
+}
+
+func AddAdminCharacterRoutes(app *fiber.App) {
+	apiGroup := app.Group("/api")
+	apiGroup.Post("/characters", handleCreateCharacter)
+	apiGroup.Delete("/characters/:id", handleDeleteCharacterById)
 }
 
 func handleGetCharacters(c *fiber.Ctx) error {
 	db := database.Client
 
-	query := "SELECT * FROM characters"
+	query := "SELECT characters.id, characters.name, characters.class, species.id, species.name, genders.id, genders.name FROM characters LEFT JOIN species ON characters.species = species.id LEFT JOIN genders ON characters.gender = genders.id"
 
 	res, err := db.Query(query)
 
@@ -32,12 +38,16 @@ func handleGetCharacters(c *fiber.Ctx) error {
 
 	defer res.Close()
 
-	characters := []models.Character{}
+	characters := []models.CharacterObject{}
 
 	for res.Next() {
-		var character models.Character
+		var character models.CharacterObject
+		var speciesID sql.NullInt64
+		var speciesName sql.NullString
+		var genderID sql.NullInt64
+		var genderName sql.NullString
 
-		err := res.Scan(&character.ID, &character.Name, &character.Species, &character.Gender, &character.Class)
+		err := res.Scan(&character.ID, &character.Name, &character.Class, &speciesID, &speciesName, &genderID, &genderName)
 
 		if err != nil {
 			fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
@@ -45,6 +55,20 @@ func handleGetCharacters(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"msg": "Internal server error",
 			})
+		}
+
+		if speciesID.Valid {
+			character.Species = &models.SpeciesObject{
+				Name: speciesName.String,
+				URL:  fmt.Sprintf("https://me-api.fly.dev/api/species/%d", speciesID.Int64),
+			}
+		}
+
+		if genderID.Valid {
+			character.Gender = &models.GenderObject{
+				Name: genderName.String,
+				URL:  fmt.Sprintf("https://me-api.fly.dev/api/genders/%d", genderID.Int64),
+			}
 		}
 
 		characters = append(characters, character)
@@ -121,4 +145,50 @@ func handleCreateCharacter(c *fiber.Ctx) error {
 
 	character.ID = int(id)
 	return c.Status(fiber.StatusCreated).JSON(character)
+}
+
+func handleDeleteCharacterById(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+
+	if err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"msg": "Bad request - invalid id",
+		})
+	}
+
+	db := database.Client
+
+	query := fmt.Sprintf("DELETE FROM characters WHERE id = %d", id)
+
+	result, err := db.Exec(query)
+
+	if err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"msg": "Failed to delete character",
+		})
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"msg": "Failed to delete character",
+		})
+	}
+
+	if rowsAffected == 0 {
+		fmt.Printf("Error - \"%s\" for the following request:\n", err.Error())
+
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"msg": "Character not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"msg": "Character deleted"})
 }

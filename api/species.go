@@ -5,19 +5,17 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/njwong/me-api/database"
-	"github.com/njwong/me-api/middleware"
 	"github.com/njwong/me-api/models"
 )
 
 func AddSpeciesEndpoints(app *fiber.App) {
 	apiGroup := app.Group("/api")
-
-	// Public endpoints
 	apiGroup.Get("/species", handleGetSpecies)
 	apiGroup.Get("/species/:id", handleGetSpeciesById)
+}
 
-	// Protected endpoints
-	apiGroup.Use(middleware.JWTAuth)
+func AddAdminSpeciesEndpoints(app *fiber.App) {
+	apiGroup := app.Group("/api")
 	apiGroup.Post("/species", handleCreateSpecies)
 	apiGroup.Put("/species/:id", handleUpdateSpecies)
 	apiGroup.Delete("/species/:id", handleDeleteSpeciesById)
